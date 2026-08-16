@@ -1,0 +1,19 @@
+[project]
+name = "coheart-api"
+version = "0.1.0"
+description = "CoHeart Academy backend API"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "fastapi==0.111.1",
+  "uvicorn==0.23.2",
+  "pydantic==2.9.0",
+  "fpdf==1.7.2",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app"]
