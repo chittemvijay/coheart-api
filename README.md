@@ -11,13 +11,14 @@ This module exposes the application APIs that power the CoHeart Academy web app,
 - Lesson and quiz management
 - Progress tracking and certificate generation
 - Admin controls for roles, documents, MIS trackers, notifications, and audit logs
-- Persistent JSON-backed data storage
+- PostgreSQL-backed data storage
 
 ## Tech stack
 
 - Python 3.10+
 - FastAPI
 - Pydantic v2
+- PostgreSQL via SQLAlchemy and psycopg
 - FPDF for certificate PDFs
 
 ## Quick start
@@ -46,9 +47,25 @@ The API initializes a default admin user on first run. Replace these values befo
 
 ## Data persistence
 
-Data is stored locally in the repository root as `coheart_data.json`.
+Application state is stored in PostgreSQL. Set `DATABASE_URL` before starting
+the API, for example:
 
-The app writes and loads the following state:
+```powershell
+$env:DATABASE_URL = "postgresql+psycopg://postgres:postgres@localhost:5432/coheart"
+```
+
+Create the database before starting the API:
+
+```sql
+CREATE DATABASE coheart;
+```
+
+The API creates its `app_state` table automatically on startup. Existing
+`coheart_data.json` data is imported automatically the first time the database
+does not contain application state. The JSON file is no longer written after
+the import.
+
+The PostgreSQL state includes:
 
 - users
 - sessions
@@ -63,6 +80,10 @@ The app writes and loads the following state:
 - mis_data
 - documents
 - notifications
+
+Uploaded document files remain in the local `data/docs` directory; PostgreSQL
+stores their metadata. Use shared object storage for files when deploying more
+than one API instance.
 
 ## API summary
 
@@ -189,4 +210,4 @@ Start-Process http://localhost:8000/docs
 
 ## Production note
 
-This repository is intentionally a backend module and is designed to be consumed by a separate frontend or client application. For production, replace the default admin account and secure the environment, session handling, and SMTP settings before deployment.
+This repository is intentionally a backend module and is designed to be consumed by a separate frontend or client application. For production, replace the default admin account, set a strong PostgreSQL password, and secure the environment, session handling, and SMTP settings before deployment. The current adapter preserves the existing API contracts in a single PostgreSQL JSONB row; it can be normalized into relational tables as the domain grows.

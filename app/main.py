@@ -1,6 +1,5 @@
 from io import BytesIO
 from typing import Dict, List, Optional
-import json
 from pathlib import Path
 from uuid import uuid4
 import os
@@ -19,6 +18,7 @@ from . import roles as roles_module
 from . import mis as mis_module
 from . import docs as docs_module
 from . import notifications as notifications_module
+from .database import initialize_database, load_legacy_state, load_state, save_state
 
 app = FastAPI(title="CoHeart Academy API")
 
@@ -142,18 +142,14 @@ def save_data() -> None:
         "documents": docs_module.documents,
         "notifications": notifications_module.notifications,
     }
-    try:
-        DATA_FILE.write_text(json.dumps(payload, indent=2))
-    except Exception:
-        pass
+    save_state(payload)
 
 
 def load_data() -> None:
-    if not DATA_FILE.exists():
-        return
-    try:
-        obj = json.loads(DATA_FILE.read_text())
-    except Exception:
+    obj = load_state()
+    if obj is None:
+        obj = load_legacy_state(DATA_FILE)
+    if obj is None:
         return
 
     users.clear()
@@ -315,6 +311,7 @@ def initialize_data() -> None:
     ]
 
 
+initialize_database()
 load_data()
 initialize_data()
 save_data()
